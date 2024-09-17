@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import {
   Dimensions,
   InteractionManager,
-  NativeModules,
   Platform,
   StyleSheet,
   Animated,
@@ -41,6 +40,43 @@ const IPHONE14PRO_WIDTH = 393;
 const IPHONE14PRO_MAX_HEIGHT = 932;
 const IPHONE14PRO_MAX_WIDTH = 430;
 
+// iPhone 16 Pro and iPhone 16 Pro Max have different screen resolution with dynamic isaland
+const IPHONE16PRO_HEIGHT = 874;
+const IPHONE16PRO_WIDTH = 402;
+
+const IPHONE16PRO_MAX_HEIGHT = 956;
+const IPHONE16PRO_MAX_WIDTH = 440;
+
+const iPhoneXScreenWidthList = [
+  X_WIDTH,
+  XSMAX_WIDTH,
+  IPHONE12_WIDTH,
+  IPHONE12_MAX_WIDTH,
+  IPHONE12_MINI_WIDTH,
+];
+
+const iPhoneXScreenHeightList = [
+  X_HEIGHT,
+  XSMAX_HEIGHT,
+  IPHONE12_HEIGHT,
+  IPHONE12_MAX_HEIGHT,
+  IPHONE12_MINI_HEIGHT,
+];
+
+const iPhoneWidthListWithDynamicIsland = [
+  IPHONE14PRO_WIDTH,
+  IPHONE14PRO_MAX_WIDTH,
+  IPHONE16PRO_WIDTH,
+  IPHONE16PRO_MAX_WIDTH,
+];
+
+const iPhoneHeightListWithDynamicIsland = [
+  IPHONE14PRO_HEIGHT,
+  IPHONE14PRO_MAX_HEIGHT,
+  IPHONE16PRO_HEIGHT,
+  IPHONE16PRO_MAX_HEIGHT,
+];
+
 const getResolvedDimensions = () => {
   const { width, height } = Dimensions.get('window');
   if (width === 0 && height === 0) return Dimensions.get('screen');
@@ -49,19 +85,15 @@ const getResolvedDimensions = () => {
 
 const { height: D_HEIGHT, width: D_WIDTH } = getResolvedDimensions();
 
-const { PlatformConstants = {} } = NativeModules;
-const { minor = 0 } = PlatformConstants.reactNativeVersion || {};
-
 const isIPhoneX = (() => {
   if (Platform.OS !== 'ios') {
     return false;
   }
   return (
-    ((D_HEIGHT === X_HEIGHT && D_WIDTH === X_WIDTH) || (D_HEIGHT === X_WIDTH && D_WIDTH === X_HEIGHT)) || 
-    ((D_HEIGHT === XSMAX_HEIGHT && D_WIDTH === XSMAX_WIDTH) || (D_HEIGHT === XSMAX_WIDTH && D_WIDTH === XSMAX_HEIGHT)) || 
-    ((D_HEIGHT === IPHONE12_HEIGHT && D_WIDTH === IPHONE12_WIDTH) || (D_HEIGHT === IPHONE12_WIDTH && D_WIDTH === IPHONE12_HEIGHT)) || 
-    ((D_HEIGHT === IPHONE12_MAX_HEIGHT && D_WIDTH === IPHONE12_MAX_WIDTH)  || (D_HEIGHT === IPHONE12_MAX_WIDTH && D_WIDTH === IPHONE12_MAX_HEIGHT)) || 
-    ((D_HEIGHT === IPHONE12_MINI_HEIGHT && D_WIDTH === IPHONE12_MINI_WIDTH) || (D_HEIGHT === IPHONE12_MINI_WIDTH && D_WIDTH === IPHONE12_MINI_HEIGHT))
+    (iPhoneXScreenWidthList.indexOf(D_WIDTH) !== -1 &&
+      iPhoneXScreenHeightList.indexOf(D_HEIGHT) !== -1) ||
+    (iPhoneXScreenWidthList.indexOf(D_HEIGHT) !== -1 &&
+      iPhoneXScreenHeightList.indexOf(D_WIDTH) !== -1)
   );
 })();
 
@@ -70,8 +102,10 @@ const isIPhoneSupportDynamicIsaland = (() => {
     return false;
   }
   return (
-    ((D_HEIGHT === IPHONE14PRO_HEIGHT && D_WIDTH === IPHONE14PRO_WIDTH) || (D_HEIGHT === IPHONE14PRO_WIDTH && D_WIDTH === IPHONE14PRO_HEIGHT)) || 
-    ((D_HEIGHT === IPHONE14PRO_MAX_HEIGHT && D_WIDTH === IPHONE14PRO_MAX_WIDTH) || (D_HEIGHT === IPHONE14PRO_MAX_WIDTH && D_WIDTH === IPHONE14PRO_MAX_HEIGHT))
+    (iPhoneWidthListWithDynamicIsland.indexOf(D_WIDTH) !== -1 &&
+      iPhoneHeightListWithDynamicIsland.indexOf(D_HEIGHT) !== -1) ||
+    (iPhoneWidthListWithDynamicIsland.indexOf(D_HEIGHT) !== -1 &&
+      iPhoneHeightListWithDynamicIsland.indexOf(D_WIDTH) !== -1)
   );
 })();
 
@@ -91,8 +125,8 @@ const isNewIPadPro = (() => {
   return (
     (D_HEIGHT === IPADPRO11_HEIGHT && D_WIDTH === IPADPRO11_WIDTH) ||
     (D_HEIGHT === IPADPRO11_WIDTH && D_WIDTH === IPADPRO11_HEIGHT) ||
-    ((D_HEIGHT === IPADPRO129_HEIGHT && D_WIDTH === IPADPRO129_WIDTH) ||
-      (D_HEIGHT === IPADPRO129_WIDTH && D_WIDTH === IPADPRO129_HEIGHT))
+    (D_HEIGHT === IPADPRO129_HEIGHT && D_WIDTH === IPADPRO129_WIDTH) ||
+    (D_HEIGHT === IPADPRO129_WIDTH && D_WIDTH === IPADPRO129_HEIGHT)
   );
 })();
 
@@ -114,7 +148,7 @@ const isIPad = (() => {
 
 let _customStatusBarHeight = null;
 let _customStatusBarHidden = null;
-const statusBarHeight = isLandscape => {
+const statusBarHeight = (isLandscape) => {
   if (_customStatusBarHeight !== null) {
     return _customStatusBarHeight;
   }
@@ -152,7 +186,7 @@ const statusBarHeight = isLandscape => {
   return isLandscape || _customStatusBarHidden ? 0 : 20;
 };
 
-const doubleFromPercentString = percent => {
+const doubleFromPercentString = (percent) => {
   if (!percent.includes('%')) {
     return 0;
   }
@@ -165,11 +199,11 @@ const doubleFromPercentString = percent => {
 };
 
 class SafeView extends Component {
-  static setStatusBarHeight = height => {
+  static setStatusBarHeight = (height) => {
     _customStatusBarHeight = height;
   };
 
-  static setStatusBarHidden = hidden => {
+  static setStatusBarHidden = (hidden) => {
     _customStatusBarHidden = hidden;
   };
 
@@ -205,7 +239,7 @@ class SafeView extends Component {
 
     return (
       <Animated.View
-        ref={c => (this.view = c)}
+        ref={(c) => (this.view = c)}
         pointerEvents="box-none"
         {...props}
         onLayout={this._handleLayout}
@@ -214,7 +248,7 @@ class SafeView extends Component {
     );
   }
 
-  _handleLayout = e => {
+  _handleLayout = (e) => {
     if (this.props.onLayout) this.props.onLayout(e);
 
     this._updateMeasurements();
@@ -273,13 +307,8 @@ class SafeView extends Component {
     const { touchesTop, touchesBottom, touchesLeft, touchesRight } = this.state;
     const { forceInset, isLandscape } = this.props;
 
-    const {
-      paddingTop,
-      paddingBottom,
-      paddingLeft,
-      paddingRight,
-      viewStyle,
-    } = this._getViewStyles();
+    const { paddingTop, paddingBottom, paddingLeft, paddingRight, viewStyle } =
+      this._getViewStyles();
 
     const style = {
       ...viewStyle,
@@ -290,7 +319,7 @@ class SafeView extends Component {
     };
 
     if (forceInset) {
-      Object.keys(forceInset).forEach(key => {
+      Object.keys(forceInset).forEach((key) => {
         let inset = forceInset[key];
 
         if (inset === 'always') {
@@ -382,7 +411,7 @@ class SafeView extends Component {
     };
   };
 
-  _getInset = key => {
+  _getInset = (key) => {
     const { isLandscape } = this.props;
     return getInset(key, isLandscape);
   };
@@ -421,8 +450,8 @@ const SafeAreaView = withOrientation(SafeView);
 
 export default SafeAreaView;
 
-export const withSafeArea = function(forceInset = {}) {
-  return WrappedComponent => {
+export const withSafeArea = function (forceInset = {}) {
+  return (WrappedComponent) => {
     class withSafeArea extends Component {
       render() {
         return (
